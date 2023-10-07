@@ -1,7 +1,6 @@
 import streamlit as st
 
 def uiHeroSection():
-    st.set_page_config(page_title="Load & Ask", page_icon="robot_face")
     st.write(
         """<style>
         [data-testid="column"] {
