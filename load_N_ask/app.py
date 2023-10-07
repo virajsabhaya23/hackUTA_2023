@@ -77,26 +77,32 @@ def main():
     if uploaded_file is not None:
         if uploaded_file.name.endswith('.pdf'):
             text = read_pdf(uploaded_file)
-        elif uploaded_file.name.endswith('.csv'):
             st.write(text)
-            agent = create_csv_agent(OpenAI(openai_api_key=OPENAI_API_KEY,temperature=0), uploaded_file.name, verbose=True)
-            st.write(agent)
-        # TODO: add support for other file types
-        # elif uploaded_file.name.endswith('.txt'):
-        #     text=parse_text(uploaded_file)
-        # elif uploaded_file.name.endswith('.docx'):
-        #     text=parse_docx(uploaded_file)
-        else:
-            raise ValueError("File type not supported")
+        # elif uploaded_file.name.endswith('.csv'):
+        #     st.write(text)
+        #     agent = create_csv_agent(OpenAI(openai_api_key=OPENAI_API_KEY,temperature=0), uploaded_file.name, verbose=True)
+        #     st.write(agent)
+        # # TODO: add support for other file types
+        # # elif uploaded_file.name.endswith('.txt'):
+        # #     text=parse_text(uploaded_file)
+        # # elif uploaded_file.name.endswith('.docx'):
+        # #     text=parse_docx(uploaded_file)
+        # else:
+        #     raise ValueError("File type not supported")
 
-    #     if uploaded_file.name.endswith('.pdf'):
-    #         try:
-    #             with st.spinner("Splitting text into chunks ..."):
-    #                 chunks = split_text(text)
-    #         except OpenAIError as e:
-    #             st.error(e._message)
-    #         chunks = split_text(text)
-    #         # st.write(chunks)
+        if uploaded_file.name.endswith('.pdf'):
+            try:
+                with st.spinner("Splitting text into chunks ..."):
+                    chunks = split_text(text)
+            except Exception as e:
+                st.error(e)
+            chunks = split_text(text)
+            st.write(chunks)
+            
+        embeddings = HuggingFaceEmbeddings()
+        
+        
+
 
     #     # function to initialize session state
     #     init_session_state()
