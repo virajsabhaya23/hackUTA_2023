@@ -1,4 +1,0 @@
-.env
-*.DS_Store
-# ignore pycache
-__pycache__/
