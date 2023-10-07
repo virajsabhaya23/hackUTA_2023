@@ -1,4 +1,5 @@
 import os
+import sys
 import streamlit as st
 import pinecone
 from langchain.vectorstores import FAISS
@@ -11,10 +12,8 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.chains import ConversationalRetrievalChain
 from langchain.agents import create_csv_agent
 from streamlit_chat import message
-
 # lama-2 imports
 import replicate
-
 # custom imports
 from uiLayouts import uiSidebarInfo, uiSidebarWorkingInfo, uiHeroSection
 from readFiles import read_pdf, read_csv
@@ -22,13 +21,12 @@ from utils import init_session_state, clear_submit
 from splitText import split_text
 
 
-
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
 st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
+
 def main():
-    
     # hero section UI component
     uiHeroSection()
 
@@ -46,14 +44,6 @@ def main():
     os.environ['REPLICATE_API_TOKEN'] = replicate_api
     # initialize Pinecone
     pinecone.init(api_key=replicate_api)
-
-    # pdf loader
-    # loader = PyPDFLoader('./NAME_OF_YOUR_PDF_HERE.pdf')
-    # documents = loader.load()
-
-    # # Split the documents into smaller chunks for processing
-    # text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    # texts = text_splitter.split_documents(documents)
 
     # get the option from user what file they are importing
     st.write('### 2. a) Select the type of file you are uploading | ⚠️csv file type is work-in-progress')
@@ -77,18 +67,7 @@ def main():
     if uploaded_file is not None:
         if uploaded_file.name.endswith('.pdf'):
             text = read_pdf(uploaded_file)
-            st.write(text)
-        # elif uploaded_file.name.endswith('.csv'):
-        #     st.write(text)
-        #     agent = create_csv_agent(OpenAI(openai_api_key=OPENAI_API_KEY,temperature=0), uploaded_file.name, verbose=True)
-        #     st.write(agent)
-        # # TODO: add support for other file types
-        # # elif uploaded_file.name.endswith('.txt'):
-        # #     text=parse_text(uploaded_file)
-        # # elif uploaded_file.name.endswith('.docx'):
-        # #     text=parse_docx(uploaded_file)
-        # else:
-        #     raise ValueError("File type not supported")
+            # st.write(text)
 
         if uploaded_file.name.endswith('.pdf'):
             try:
@@ -101,9 +80,38 @@ def main():
             
         embeddings = HuggingFaceEmbeddings()
         
+        # Set up the Pinecone vector database
+        index_name = "loadnask"
+        index = pinecone.Index(index_name)
         
+        documents = [{"id": str(i), "text": chunk} for i, chunk in enumerate(chunks)]
+        vectordb = Pinecone.from_documents(documents, embeddings, index_name=index_name)
 
+        llm = replicate(
+            model = "a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
+            input = {"temperature": 0.75}
+        )
 
+        # Set up the Conversational Retrieval Chain
+        qa_chain = ConversationalRetrievalChain.from_llm(
+            llm,
+            vectordb.as_retriever(search_kwargs={'k': 2}),
+            return_source_documents=True
+        )
+
+        # Start chatting with the chatbot
+        chat_history = []
+        while True:
+            query = input('Prompt: ')
+            if query.lower() in ["exit", "quit", "q"]:
+                print('Exiting')
+                sys.exit()
+            result = qa_chain({'question': query, 'chat_history': chat_history})
+            print('Answer: ' + result['answer'] + '\n')
+            chat_history.append((query, result['answer']))
+            
+        
+            
     #     # function to initialize session state
     #     init_session_state()
 

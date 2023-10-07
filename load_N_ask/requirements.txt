@@ -7,4 +7,5 @@ openai
 tiktoken
 docx2txt
 replicate
-pinecone
+pinecone-client
+sentence-transformers
