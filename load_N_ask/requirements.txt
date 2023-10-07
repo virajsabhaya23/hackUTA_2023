@@ -2,10 +2,7 @@ langchain
 faiss-cpu
 pypdf2
 streamlit-chat
+streamlit_lottie
 requests
 openai
 tiktoken
-docx2txt
-replicate
-pinecone-client
-sentence-transformers
