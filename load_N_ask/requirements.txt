@@ -7,3 +7,4 @@ openai
 tiktoken
 docx2txt
 streamlit-lottie
+tabulate
