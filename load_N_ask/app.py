@@ -96,7 +96,6 @@ def main():
              #   st.write("## ℹ️ Summary")
               #  with st.expander("Details ...", expanded=True):
                #     st.write(summary_response)
-            init_session_state()
             summary_button = st.button("Summary of Recent File")
             if summary_button:
                 summary_question = "What is the summary of the document?" 
@@ -105,13 +104,13 @@ def main():
                     st.write("## ℹ️ Summary")
                     with st.expander("Details ...", expanded=True):
                         st.write(summary_response)
+            init_session_state()
         elif file_type.lower().endswith('csv'):
             # csvData = pd.read_csv(uploaded_file)
             # st.dataframe(csvData, use_container_width=True)
             pass
             init_session_state()
 
-        
 
         # Ask question
         st.write('### Ask your question')
@@ -155,8 +154,8 @@ def main():
                     message(st.session_state['past'][i], is_user=True, key=str(i)+'_user')
 
     with st.sidebar:
-        uiSidebarInfo()
         uiSidebarWorkingInfo()
+        uiSidebarInfo()
 
 
 if __name__ == '__main__':
