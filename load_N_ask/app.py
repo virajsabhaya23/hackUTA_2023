@@ -11,7 +11,7 @@ import os
 
 # custom imports
 from uiLayouts import uiSidebarInfo, uiSidebarWorkingInfo, uiHeroSection #image_custom
-from readFiles import read_pdf, read_csv
+from readFiles import read_pdf, read_csv, read_txt
 from utils import init_session_state, clear_submit
 from splitText import split_text
 
@@ -74,6 +74,9 @@ def main():
     elif file_type.lower().endswith('csv'):
         uploaded_file = st.file_uploader('Upload your CSV file', type=['csv'], label_visibility="collapsed")
         st.write(uploaded_file)
+    elif file_type.lower().endswith('txt'):
+        uploaded_file = st.file_uploader('Upload your TXT file', type=['txt'], label_visibility="collapsed")
+        st.write(uploaded_file)
     else:
         uploaded_file = None
 
@@ -103,6 +106,30 @@ def main():
             chunks = split_text(text)
             # st.write(chunks)
 
+    # read CSV file and extract text
+    if uploaded_file is not None:
+        if uploaded_file.name.endswith('.csv'):
+            try:
+                with st.spinner("Splitting text into chunks ..."):
+                    chunks = read_csv(uploaded_file)
+            except OpenAIError as e:
+                st.error(e._message)
+            chunks = read_csv(uploaded_file)
+            # st.write(chunks)
+
+    # read TXT file and extract text
+    if uploaded_file is not None:
+        if uploaded_file.name.endswith('.txt'):
+            try:
+                with st.spinner("Splitting text into chunks ..."):
+                    chunks = read_txt(uploaded_file)
+            except OpenAIError as e:
+                st.error(e._message)
+            chunks = read_txt(uploaded_file)
+            # st.write(chunks)
+
+
+
         # function to initialize session state
         init_session_state()
 
@@ -124,6 +151,10 @@ def main():
                             response = ask_question(user_question, chunks, OPENAI_API_KEY)
                         elif file_type.lower().endswith('csv'):
                             response = agent.run(user_question)
+                        elif file_type.lower().endswith('txt'):
+                            response = ask_question(user_question, chunks, OPENAI_API_KEY)
+                        else:
+                            raise ValueError("File type not supported")
                 except Exception as e:
                     st.error(e)
             #--- with get_openai_callback() as callback:
