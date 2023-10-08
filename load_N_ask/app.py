@@ -12,17 +12,10 @@ import pandas as pd
 import openai
 
 # custom imports
-<<<<<<< HEAD
 from uiLayouts import *
 from readFiles import *
 from utils import *
 from splitText import *
-=======
-from uiLayouts import uiSidebarInfo, uiSidebarWorkingInfo, uiHeroSection #image_custom
-from readFiles import read_pdf, read_csv, read_txt
-from utils import init_session_state, clear_submit
-from splitText import split_text
->>>>>>> refs/remotes/origin/main
 
 
 def ask_general_question(user_question, OPENAI_API_KEY):
@@ -90,32 +83,11 @@ def main():
         "Select the type of file you are uploading",
         ("PDF", "CSV")
     )
-<<<<<<< HEAD
     
     st.write(f'### Upload your {file_type} file')
     uploaded_file = st.file_uploader(f'Upload your {file_type} files', accept_multiple_files=True)
     if uploaded_file:
         if file_type.lower().endswith('pdf'):
-=======
-
-    # Upload PDF file
-    st.write(f'### 2. b) Upload your {file_type} file')
-    if file_type.lower().endswith('pdf'):
-        uploaded_file = st.file_uploader('Upload your PDF file', type=['pdf'], label_visibility="collapsed")
-        st.write(uploaded_file)
-    elif file_type.lower().endswith('csv'):
-        uploaded_file = st.file_uploader('Upload your CSV file', type=['csv'], label_visibility="collapsed")
-        st.write(uploaded_file)
-    elif file_type.lower().endswith('txt'):
-        uploaded_file = st.file_uploader('Upload your TXT file', type=['txt'], label_visibility="collapsed")
-        st.write(uploaded_file)
-    else:
-        uploaded_file = None
-
-    # Read PDF file and extract text
-    if uploaded_file is not None:
-        if uploaded_file.name.endswith('.pdf'):
->>>>>>> refs/remotes/origin/main
             text = read_pdf(uploaded_file)
             chunks = split_text(text)
             summary_question = "What is the summary of the document?" 
@@ -131,36 +103,7 @@ def main():
             pass
             init_session_state()
 
-<<<<<<< HEAD
         
-=======
-    # read CSV file and extract text
-    if uploaded_file is not None:
-        if uploaded_file.name.endswith('.csv'):
-            try:
-                with st.spinner("Splitting text into chunks ..."):
-                    chunks = read_csv(uploaded_file)
-            except OpenAIError as e:
-                st.error(e._message)
-            chunks = read_csv(uploaded_file)
-            # st.write(chunks)
-
-    # read TXT file and extract text
-    if uploaded_file is not None:
-        if uploaded_file.name.endswith('.txt'):
-            try:
-                with st.spinner("Splitting text into chunks ..."):
-                    chunks = read_txt(uploaded_file)
-            except OpenAIError as e:
-                st.error(e._message)
-            chunks = read_txt(uploaded_file)
-            # st.write(chunks)
-
-
-
-        # function to initialize session state
-        init_session_state()
->>>>>>> refs/remotes/origin/main
 
         # Ask question
         st.write('### Ask your question')
@@ -180,7 +123,6 @@ def main():
                         if file_type.lower().endswith('pdf'):
                             response = ask_question(user_question, chunks, OPENAI_API_KEY)
                         elif file_type.lower().endswith('csv'):
-<<<<<<< HEAD
                             # llm = OpenAI(api_token = OPENAI_API_KEY, temperature=0)
                             # response = df.chat(user_question)
                             ############## attempt-1 #############
@@ -190,13 +132,6 @@ def main():
                                 st.error("Please ask a question!")
                             else:
                                 response = agent.run(user_question)
-=======
-                            response = agent.run(user_question)
-                        elif file_type.lower().endswith('txt'):
-                            response = ask_question(user_question, chunks, OPENAI_API_KEY)
-                        else:
-                            raise ValueError("File type not supported")
->>>>>>> refs/remotes/origin/main
                 except Exception as e:
                     st.error(e)
             #--- with get_openai_callback() as callback:

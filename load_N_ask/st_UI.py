@@ -59,7 +59,7 @@ def uiGetFileType():
     st.write('### 2. a) Select the type of file you are uploading | ⚠️csv file type is work-in-progress')
     file_type = st.selectbox(
         "Select the type of file you are uploading",
-        ("PDF", "CSV", "TXT")
+        ("PDF", "CSV")
     )
 
     st.write(f'### 2. b) Upload your {file_type} file')

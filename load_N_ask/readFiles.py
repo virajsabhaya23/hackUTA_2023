@@ -21,17 +21,8 @@ def read_csv(userFile):
         :return: text extracted from CSV file
     """
     text = ""
-    with open(userFile.name, 'r') as f:
-        text = f.read()
-    return text
-
-def read_txt(userFile):
-    """
-        Reads a TXT file and extracts its text
-        :param userFile: TXT file uploaded by user
-        :return: text extracted from TXT file
-    """
-    text = ""
-    with open(userFile.name, 'r') as f:
-        text = f.read()
+    with open(userFile.name, newline='') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=',')
+        for row in csvreader:
+            text += row[0]
     return text
