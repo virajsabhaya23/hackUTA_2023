@@ -3,5 +3,5 @@
 # ignore pycache
 __pycache__/
 
-# ignore the .steramlit folder
-.steramlit/
+# ignore the .steramlit folder and everything inside it
+.streamlit/
