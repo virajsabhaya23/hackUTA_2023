@@ -90,13 +90,21 @@ def main():
         if file_type.lower().endswith('pdf'):
             text = read_pdf(uploaded_file)
             chunks = split_text(text)
-            summary_question = "What is the summary of the document?" 
-            summary_response = ask_question(summary_question, chunks, OPENAI_API_KEY)  
-            with st.sidebar:
-                st.write("## ℹ️ Summary")
-                with st.expander("Details ...", expanded=True):
-                    st.write(summary_response)
+            #summary_question = "What is the summary of the document?" 
+            #ummary_response = ask_question(summary_question, chunks, OPENAI_API_KEY)  
+            #with st.sidebar:
+             #   st.write("## ℹ️ Summary")
+              #  with st.expander("Details ...", expanded=True):
+               #     st.write(summary_response)
             init_session_state()
+            summary_button = st.button("Summary of Recent File")
+            if summary_button:
+                summary_question = "What is the summary of the document?" 
+                summary_response = ask_question(summary_question, chunks, OPENAI_API_KEY)
+                with st.sidebar:
+                    st.write("## ℹ️ Summary")
+                    with st.expander("Details ...", expanded=True):
+                        st.write(summary_response)
         elif file_type.lower().endswith('csv'):
             # csvData = pd.read_csv(uploaded_file)
             # st.dataframe(csvData, use_container_width=True)
