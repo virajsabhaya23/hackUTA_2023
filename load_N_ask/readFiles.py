@@ -7,10 +7,11 @@ def read_pdf(userFile):
         :param userFile: PDF file uploaded by user
         :return: text extracted from PDF file
     """
-    pdf_reader = PdfReader(userFile)
     text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text()
+    for pdf_file in userFile:
+        pdf_reader = PdfReader(pdf_file)
+        for page in pdf_reader.pages:
+            text += page.extract_text()
     return text
 
 def read_csv(userFile):

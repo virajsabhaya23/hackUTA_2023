@@ -8,13 +8,27 @@ from langchain.agents import create_csv_agent
 from langchain.callbacks import get_openai_callback
 from streamlit_chat import message
 import os
+import pandas as pd
+import openai
 
 # custom imports
-from uiLayouts import uiSidebarInfo, uiSidebarWorkingInfo, uiHeroSection #image_custom
-from readFiles import read_pdf, read_csv
-from utils import init_session_state, clear_submit
-from splitText import split_text
+from uiLayouts import *
+from readFiles import *
+from utils import *
+from splitText import *
 
+
+def ask_general_question(user_question, OPENAI_API_KEY):
+    openai.api_key = OPENAI_API_KEY
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": user_question}
+        ]
+    )
+    answer = response['choices'][0]['message']['content']
+    return answer
 
 def create_embeddings(OPENAI_API_KEY, chunks):
     """
@@ -37,77 +51,62 @@ def ask_question(user_question, chunks, OPENAI_API_KEY):
     # creating embeddings
     knowledge = create_embeddings(OPENAI_API_KEY, chunks)
     docs = knowledge.similarity_search(user_question)
-    # st.write(docs)
     llms = OpenAI(openai_api_key=OPENAI_API_KEY)
+    
     qa_chain = load_qa_chain(llms, chain_type="stuff")
     response = qa_chain.run(input_documents=docs, question=user_question)
-    # st.write(response)
-    return response
 
+    if "I don't know" in response:  # adjust this condition based on the actual responses you get
+        response = ask_general_question(user_question, OPENAI_API_KEY)
+        
+    return response
+    
 
 def main():
     uiHeroSection()
     # image_custom()
     # get API key from USER
-    st.write('### 1. Enter your OpenAI API key')
-    OPENAI_API_KEY = st.text_input(
-        help="You can get your API key from https://platform.openai.com/account/api-keys",
-        label="WARNING: API key is only free for first 3 months! check OpenAI's policy for upgraded guidelines.",
-        type='password',
-        placeholder="sk-abcdefghi...",
-        # label_visibility="collapsed"
-    )
+    # st.write('### 1. Enter your OpenAI API key')
+    # OPENAI_API_KEY = st.text_input(
+    #     help="You can get your API key from https://platform.openai.com/account/api-keys",
+    #     label="WARNING: API key is only free for first 3 months! check OpenAI's policy for upgraded guidelines.",
+    #     type='password',
+    #     placeholder="sk-abcdefghi...",
+    #     # label_visibility="collapsed"
+    # )
+    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
     os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
     # get the option from user what file they are importing
-    st.write('### 2. a) Select the type of file you are uploading | ⚠️csv file type is work-in-progress')
+    st.write('### Select the type of file you are uploading')
     file_type = st.selectbox(
         "Select the type of file you are uploading",
         ("PDF", "CSV")
     )
-
-    # Upload PDF file
-    st.write(f'### 2. b) Upload your {file_type} file')
-    if file_type.lower().endswith('pdf'):
-        uploaded_file = st.file_uploader('Upload your PDF file', type=['pdf'], label_visibility="collapsed")
-        st.write(uploaded_file)
-    elif file_type.lower().endswith('csv'):
-        uploaded_file = st.file_uploader('Upload your CSV file', type=['csv'], label_visibility="collapsed")
-        st.write(uploaded_file)
-    else:
-        uploaded_file = None
-
-    # Read PDF file and extract text
-    if uploaded_file is not None:
-        if uploaded_file.name.endswith('.pdf'):
+    
+    st.write(f'### Upload your {file_type} file')
+    uploaded_file = st.file_uploader(f'Upload your {file_type} files', accept_multiple_files=True)
+    if uploaded_file:
+        if file_type.lower().endswith('pdf'):
             text = read_pdf(uploaded_file)
-        elif uploaded_file.name.endswith('.csv'):
-            st.write(text)
-            agent = create_csv_agent(OpenAI(openai_api_key=OPENAI_API_KEY,temperature=0), uploaded_file.name, verbose=True)
-            st.write(agent)
-        # TODO: add support for other file types
-        #     text=read_pdf(uploaded_file)
-        # elif uploaded_file.name.endswith('.txt'):
-        #     text=parse_text(uploaded_file)
-        # elif uploaded_file.name.endswith('.docx'):
-        #     text=parse_docx(uploaded_file)
-        else:
-            raise ValueError("File type not supported")
-
-        if uploaded_file.name.endswith('.pdf'):
-            try:
-                with st.spinner("Splitting text into chunks ..."):
-                    chunks = split_text(text)
-            except OpenAIError as e:
-                st.error(e._message)
             chunks = split_text(text)
-            # st.write(chunks)
+            summary_question = "What is the summary of the document?" 
+            summary_response = ask_question(summary_question, chunks, OPENAI_API_KEY)  
+            with st.sidebar:
+                st.write("## ℹ️ Summary")
+                with st.expander("Details ...", expanded=True):
+                    st.write(summary_response)
+            init_session_state()
+        elif file_type.lower().endswith('csv'):
+            # csvData = pd.read_csv(uploaded_file)
+            # st.dataframe(csvData, use_container_width=True)
+            pass
+            init_session_state()
 
-        # function to initialize session state
-        init_session_state()
+        
 
         # Ask question
-        st.write('### 3. Ask your question'+(f' about {uploaded_file.name}' if uploaded_file else 'uploaded file'))
+        st.write('### Ask your question')
         user_question = st.text_area(on_change=clear_submit, height=90, label="Ask a question about your PDF here :", placeholder="Type your question here", label_visibility="collapsed")
 
         button = st.button("Submit!")
@@ -118,16 +117,26 @@ def main():
                 st.error("Please ask a question!")
             else:
                 st.session_state["submit"] = True
+                response = None
                 try:
                     with st.spinner("Searching for answer..."):
                         if file_type.lower().endswith('pdf'):
                             response = ask_question(user_question, chunks, OPENAI_API_KEY)
                         elif file_type.lower().endswith('csv'):
-                            response = agent.run(user_question)
+                            # llm = OpenAI(api_token = OPENAI_API_KEY, temperature=0)
+                            # response = df.chat(user_question)
+                            ############## attempt-1 #############
+                            llm = OpenAI(temperature=0)
+                            agent = create_csv_agent(llm, uploaded_file, verbose=True)
+                            if user_question is None : 
+                                st.error("Please ask a question!")
+                            else:
+                                response = agent.run(user_question)
                 except Exception as e:
                     st.error(e)
             #--- with get_openai_callback() as callback:
                 # storing past questions and answers
+            if response is not None:
                 st.session_state.past.append(user_question)
                 st.session_state.generated.append(response)
             #--- print(callback)
